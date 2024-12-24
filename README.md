@@ -4,7 +4,7 @@ StampFlyのELRS版です。
 
 <img width="300" src="https://github.com/user-attachments/assets/a41d8cbd-0b13-4dff-a2a9-e2a14cd6b905">
 
-[M5Stack用テレメトリーモニターも作って見ました。](https://github.com/kobatan/Stampfly_Monitor)
+[M5Stack用テレメトリーモニターはこちらです。](https://github.com/kobatan/Stampfly_Monitor)
 
 ## Framework
 
