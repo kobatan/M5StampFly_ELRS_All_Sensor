@@ -1,4 +1,8 @@
 # StampFly
+StampFlyのELRS版です。
+さらに、全てのセンサーを読めるようにして見ました。
+
+<img width="300" src="https://github.com/user-attachments/assets/a41d8cbd-0b13-4dff-a2a9-e2a14cd6b905">
 
 ## Framework
 
