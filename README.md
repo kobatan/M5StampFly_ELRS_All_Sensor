@@ -2,8 +2,7 @@
 StampFlyのELRS版です。[GitHub](https://github.com/kobatan/M5StampFly_ELRS_All_Sensor)
 
 
-
-<img width="300" src="https://github.com/user-attachments/assets/07504854-12d8-475c-90f1-6f416e049384">
+<img width="300" src="https://github.com/user-attachments/assets/2ed3798e-37e3-4578-946c-3506a6e02897">
 
 
 [製品版](https://github.com/m5stack/M5StampFly)と[ELRS版](https://github.com/M5Fly-kanazawa/M5StampFly/tree/elrs)のプログラムを参考にしました。
@@ -33,8 +32,7 @@ elrs.hpp の最初の方でプロポのチャンネルを設定しているの�
 アームを一度押すとフライトモードに成り、二回押すと自動離陸します。
 飛行中にアームを押すと自動着陸するようになってます。
 
-
-<img width="300" src="https://github.com/user-attachments/assets/1c84e4b5-fdc7-40cd-84ec-2e7352e59c59">
+<img width="300" src="https://github.com/user-attachments/assets/126751d2-9f55-49c0-bf31-fc233cdf6dab">
 
 
 [M5Stack用テレメトリーモニターはこちらです。](https://github.com/kobatan/Stampfly_Monitor)
