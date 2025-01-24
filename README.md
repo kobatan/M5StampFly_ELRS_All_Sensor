@@ -58,7 +58,7 @@ Platformio
 
 ## Third-party libraries
 
-fastled/FastLED
+adafruit/Adafruit NeoPixel@^1.12.4
 
 tinyu-zhao/INA3221
 
