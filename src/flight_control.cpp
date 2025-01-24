@@ -390,8 +390,7 @@ void loop_400Hz(void) {
 			
 			if (arm_check() == 1) {			// ARM ボタン　判定
 				buzzer_sound(2000, 200);		
-//				USBSerial.println("FLIFHT_MODE");	
-//				Mode = FLIGHT_MODE;
+				Mode = FLIGHT_MODE;
 			}
 
 			break;
