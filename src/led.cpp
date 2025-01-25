@@ -30,7 +30,7 @@
 
 
 #define STRIP_COUNT 2 //つなぐLEDの数
-Adafruit_NeoPixel led_strip_esp( 1, PIN_LED_ESP , NEO_GRB + NEO_KHZ800);   // ESP側LED定義
+Adafruit_NeoPixel led_strip_esp( 1, PIN_LED_ESP , NEO_GRB + NEO_KHZ800);    // ESP側LED定義
 Adafruit_NeoPixel led_strip(STRIP_COUNT, PIN_LED_ONBORD, NEO_GRB + NEO_KHZ800); // 機体側LED定義
 
 uint32_t Led_color       = 0x000000;
@@ -40,12 +40,12 @@ uint32_t led_esp[1];
 uint32_t led_onboard[2];
 
 void setCcolor(uint32_t col){
-	led_onboard[0] = col;
-	led_onboard[1] = col;	
+  led_onboard[0] = col;
+  led_onboard[1] = col;	
 }
 
 void onboard_led(int no, uint32_t col){
-	led_onboard[no] = col;
+  led_onboard[no] = col;
 }
 
 void esp_led(uint32_t col) {
@@ -53,73 +53,74 @@ void esp_led(uint32_t col) {
 }
 
 void led_init(void) {
-	led_strip.setBrightness(15);
-	led_strip.begin();
+  led_strip.setBrightness(15);
+  led_strip.begin();
   led_strip_esp.setBrightness(50);
   led_strip_esp.begin();
 }
 
 void led_brightness(uint8_t b){
-	led_strip.setBrightness(b);
+  led_strip.setBrightness(b);
 }
 
 void led_show(void) {
-	for(int i=0; i<STRIP_COUNT; i++){
-		led_strip.setPixelColor(i, led_onboard[i]);
-	}
-	led_strip.show();
+  for(int i=0; i<STRIP_COUNT; i++){
+    led_strip.setPixelColor(i, led_onboard[i]);
+  }
+  led_strip.show();
   led_strip_esp.setPixelColor(0,led_esp[0]);
   led_strip_esp.show();
 }
 
 void led_drive(void) {
-    if (Mode == AVERAGE_MODE) {
-			setCcolor(PERPLE);
-    } else if (Mode == AUTO_LANDING_MODE) {
-				setCcolor(GREEN);
-    } else if (Mode == FLIGHT_MODE) {
-        if (Control_mode == ANGLECONTROL) {
-            if (Flip_flag == 0)
-                Led_color = YELLOW;  // スタビライズモード・マニュアル飛行では黄色
-            else
-                Led_color = FLIPCOLOR;  // 宙返りではオレンジ
-        } else
-            Led_color = 0xDC669B;  // アクロモード　べに色
+  if (Mode == AVERAGE_MODE) {
+    setCcolor(PERPLE);
+  } else if (Mode == AUTO_LANDING_MODE) {
+    setCcolor(GREEN);
+  } else if (Mode == FLIGHT_MODE) {
+    if (Control_mode == ANGLECONTROL){
+      if (Flip_flag == 0){
+        Led_color = YELLOW;     // スタビライズモード・マニュアル飛行では黄色
+      }else{
+        Led_color = FLIPCOLOR;  // 宙返りではオレンジ
+      }
+    } else Led_color = 0xDC669B;   // アクロモード　べに色
 
-        if (Throttle_control_mode == 1) Led_color = 0xc71585;  // 高度制御初期　赤紫
-        if (Alt_flag >= 1) Led_color = 0x331155;               // 高度制御モードでは深紫
+    if (Throttle_control_mode == 1) Led_color = 0xc71585; // 高度制御初期　赤紫
+    if (Alt_flag >= 1) Led_color = 0x331155;              // 高度制御モードでは深紫
 
-        if (Under_voltage_flag < UNDER_VOLTAGE_COUNT) {
-					setCcolor(Led_color);
-        } else {
-					onboard_led(0, POWEROFFCOLOR);
-					onboard_led(1, Led_color);
-        }
-    } else if (Mode == PARKING_MODE) {
-        if (Under_voltage_flag < UNDER_VOLTAGE_COUNT) {
-            // イルミネーション
-            if (LedBlinkCounter == 0) {  //<10
-                if (Led_color2 & 0x800000)
-                    Led_color2 = (Led_color2 << 1) | 1;
-                else
-                    Led_color2 = Led_color2 << 1;
-								setCcolor(Led_color2);		
-                LedBlinkCounter++;
-            }
-            LedBlinkCounter++;
-            if (LedBlinkCounter > 20) LedBlinkCounter = 0;
-        } else {				// バッテリー不足
-            // 水色点滅
-            if (LedBlinkCounter < 10) {
-							setCcolor(POWEROFFCOLOR);
-            } else if (LedBlinkCounter < 200) {
-  						setCcolor(0);
-            } else
-                LedBlinkCounter = 0;
-            LedBlinkCounter++;
-        }
+    if (Under_voltage_flag < UNDER_VOLTAGE_COUNT) {
+      setCcolor(Led_color);
+    } else {
+      onboard_led(0, POWEROFFCOLOR);
+      onboard_led(1, Led_color);
     }
-    led_show();		// LEDを点灯させる
+  } else if (Mode == PARKING_MODE) {
+    if (Under_voltage_flag < UNDER_VOLTAGE_COUNT) {
+      // イルミネーション
+      if (LedBlinkCounter == 0) {  //<10
+        if (Led_color2 & 0x800000)
+          Led_color2 = (Led_color2 << 1) | 1;
+        else
+          Led_color2 = Led_color2 << 1;
+        setCcolor(Led_color2);		
+        LedBlinkCounter++;
+      }
+      LedBlinkCounter++;
+      if (LedBlinkCounter > 20) LedBlinkCounter = 0;
+    } else {				// バッテリー不足
+      // 水色点滅
+      if (LedBlinkCounter < 10) {
+        setCcolor(POWEROFFCOLOR);
+      } else if (LedBlinkCounter < 200) {
+        setCcolor(0);
+      } else{
+        LedBlinkCounter = 0;
+      }
+      LedBlinkCounter++;
+    }
+  }
+  led_show();		// LEDを点灯させる
 }
 
 
