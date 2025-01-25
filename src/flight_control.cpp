@@ -885,26 +885,25 @@ void angle_control(void) {
     float domega;
 
     // PID Control
-    if (Thrust_command / BATTERY_VOLTAGE < Motor_on_duty_threshold) {
-        // Initialize
-        reset_angle_control();
-    } else {
+    if (Thrust_command / BATTERY_VOLTAGE < Motor_on_duty_threshold){ // スロットル指令値が小さかったら
+        reset_angle_control();  // 各種データクリア
+    }else{
         // Altitude Control PID
-        alt_err = Alt_ref - Altitude2;
-        if (Alt_flag >= 1) Z_dot_ref = alt_pid.update(alt_err, Interval_time);
+        alt_err = Alt_ref - Altitude2;  // 目標高度と現在高度との差
+        if (Alt_flag >= 1) Z_dot_ref = alt_pid.update(alt_err, Interval_time);  // 上昇速度を目標との差のPIDで求める
 
         if (Control_mode == ANGLECONTROL) {	// アングルモードなら
            // Get Roll and Pitch angle ref
-            Roll_angle_reference  = 0.5f * PI * (Roll_angle_command - Aileron_center);
-            Pitch_angle_reference = 0.5f * PI * (Pitch_angle_command - Elevator_center);
-            Roll_angle_reference = limit(Roll_angle_reference, -30.0f * PI / 180.0f, 30.0f * PI / 180.0f);		// 傾き+-30°に制限
-            Pitch_angle_reference = limit(Pitch_angle_reference, -30.0f * PI / 180.0f, 30.0f * PI / 180.0f);	// 傾き+-30°に制限
+            Roll_angle_reference  = 0.5f * PI * (Roll_angle_command - Aileron_center);    // 角度指令値(-1.0~1.0)から角度目標値(-90°～90°)に変換（単位はラジアン）
+            Pitch_angle_reference = 0.5f * PI * (Pitch_angle_command - Elevator_center);  // 角度指令値(-1.0~1.0)から角度目標値(-90°～90°)に変換（単位はラジアン）
+            Roll_angle_reference = limit(Roll_angle_reference, -30.0f * PI / 180.0f, 30.0f * PI / 180.0f);		// 角度目標値を +-30°に制限（単位はラジアン）
+            Pitch_angle_reference = limit(Pitch_angle_reference, -30.0f * PI / 180.0f, 30.0f * PI / 180.0f);	// 角度目標値を +-30°に制限（単位はラジアン）
             // Error
-            phi_err   = Roll_angle_reference - (Roll_angle - Roll_angle_offset);
-            theta_err = Pitch_angle_reference - (Pitch_angle - Pitch_angle_offset);
+            phi_err   = Roll_angle_reference - (Roll_angle - Roll_angle_offset);    // 現在の角度と目標角度との差 
+            theta_err = Pitch_angle_reference - (Pitch_angle - Pitch_angle_offset); // 現在の角度と目標角度との差
             // Angle Control PID
-            Roll_rate_reference  = phi_pid.update(phi_err, Interval_time);
-            Pitch_rate_reference = theta_pid.update(theta_err, Interval_time);
+            Roll_rate_reference  = phi_pid.update(phi_err, Interval_time);     // 角速度（回転速度）目標値を差の値のPIDで求める
+            Pitch_rate_reference = theta_pid.update(theta_err, Interval_time); // 角速度（回転速度）目標値を差の値のPIDで求める
         }
     }
 }
