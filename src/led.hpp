@@ -45,8 +45,8 @@ void led_init(void);
 void led_brightness(uint8_t b);
 void led_show(void);
 void led_drive(void);
-void onboard_led(int no, uint32_t p);
-void esp_led(uint8_t state);
+void onboard_led(int no, uint32_t col);
+void esp_led(uint32_t col);
 void setCcolor(uint32_t col);
 
 #endif

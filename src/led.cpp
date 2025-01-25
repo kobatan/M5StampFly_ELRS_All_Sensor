@@ -30,11 +30,13 @@
 
 
 #define STRIP_COUNT 2 //つなぐLEDの数
-Adafruit_NeoPixel led_strip(STRIP_COUNT, PIN_LED_ONBORD, NEO_GRB + NEO_KHZ800);	// LED定義
+Adafruit_NeoPixel led_strip_esp( 1, PIN_LED_ESP , NEO_GRB + NEO_KHZ800);	      // ESP側LED定義
+Adafruit_NeoPixel led_strip(STRIP_COUNT, PIN_LED_ONBORD, NEO_GRB + NEO_KHZ800);	// 機体側LED定義
 
 uint32_t Led_color       = 0x000000;
 uint32_t Led_color2      = 255;
 uint16_t LedBlinkCounter = 0;
+uint32_t led_esp[1];
 uint32_t led_onboard[2];
 
 void setCcolor(uint32_t col){
@@ -46,19 +48,15 @@ void onboard_led(int no, uint32_t col){
 	led_onboard[no] = col;
 }
 
-void esp_led(uint8_t state) {
-    if (state == 1)
-			digitalWrite(PIN_LED_ESP, LOW);
-    else
-			digitalWrite(PIN_LED_ESP, HIGH);		
-    return;
+void esp_led(uint32_t col) {
+  led_esp[0] = col;
 }
 
 void led_init(void) {
-	pinMode(PIN_LED_ESP, OUTPUT);
-	esp_led(1);	//On
-	led_strip.setBrightness(30);
+	led_strip.setBrightness(15);
 	led_strip.begin();
+  led_strip_esp.setBrightness(50);
+  led_strip_esp.begin();
 }
 
 void led_brightness(uint8_t b){
@@ -70,6 +68,8 @@ void led_show(void) {
 		led_strip.setPixelColor(i, led_onboard[i]);
 	}
 	led_strip.show();
+  led_strip_esp.setPixelColor(0,led_esp[0]);
+  led_strip_esp.show();
 }
 
 void led_drive(void) {

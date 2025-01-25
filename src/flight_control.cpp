@@ -257,7 +257,7 @@ void init_copter(void) {
 
     // Initialaze LED function
     led_init();
-    esp_led(1);
+    esp_led(0x110000);
     onboard_led(0, WHITE);
     onboard_led(1, WHITE);
     led_show();

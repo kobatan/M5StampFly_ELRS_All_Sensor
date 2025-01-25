@@ -115,9 +115,9 @@ void telemetry_sequence(void) {
 
 	set_telemetry_data(&senddata);
 	if (telemetry_send((uint8_t *)&senddata, sizeof(senddata)) == 1)
-		esp_led(0);  // Telemetory Reciver OFF
+    esp_led(0x110000); // Telemetory Reciver OFF
 	else
-		esp_led(1);  // Telemetory Reciver ON
+		esp_led(0x001100);  // Telemetory Reciver ON
 }
 
 void telemetry(void) {
