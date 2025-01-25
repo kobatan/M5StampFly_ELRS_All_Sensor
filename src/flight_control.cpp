@@ -304,11 +304,11 @@ void loop_400Hz(void) {
   while (Loop_flag == 0){yield();}
   Loop_flag = 0;
 
-  E_time				= micros();
-  Interval_time	= (E_time - S_time) / 1000000.0f;
-  Elapsed_time	+= Interval_time;
+  E_time = micros();
+  Interval_time = (E_time - S_time) / 1000000.0f;
+  Elapsed_time += Interval_time;
   S_time = E_time;
-//	USBSerial.printf("Interval_time: %fmS\n", Interval_time * 1000);  // インターバル時間
+// USBSerial.printf("Interval_time: %fmS\n", Interval_time * 1000);  // インターバル時間
 
   sense_time = sensor_read();		// センサー読み込み
 //  USBSerial.printf("sense_time:%8.3fmS\n", sense_time * 1000);  // 読み込みにかかった時間。
@@ -357,7 +357,7 @@ void loop_400Hz(void) {
 
       get_command();    // リモコンデータ解析
       angle_control();  // 姿勢制御
-      rate_control();	  // モーター制御
+      rate_control();   // モーター制御
       break;
 	
     case FLIP_MODE:
@@ -404,8 +404,8 @@ void loop_400Hz(void) {
   telemetry();  // テレメトリーデータ送信
 
   uint32_t ce_time = micros();
-  Dt_time          = ce_time - cs_time;
-  OldMode          = Mode;  // Memory now mode
+  Dt_time = ce_time - cs_time;
+  OldMode = Mode;  // Memory now mode
 		
 // End of Loop_400Hz function
 // USBSerial.printf("Dt_time: %d us\n",Dt_time);
