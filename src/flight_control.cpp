@@ -238,9 +238,9 @@ uint8_t check_calib_button(void);
 uint8_t stick_function();
 
 float limit(float val, float min, float max){	// 上限下限の範囲内の値にする
-	if(val < min) return min;
-	if(val > max) return max;
-	return val;
+  if(val < min) return min;
+  if(val > max) return max;
+  return val;
 }
 
 // 割り込み関数
@@ -296,125 +296,118 @@ void init_copter(void) {
 
 // Main loop
 void loop_400Hz(void) {
-	static uint8_t led = 1;
-	float sense_time;
-	uint8_t cmd;
+  static uint8_t led = 1;
+  float sense_time;
+  uint8_t cmd;
 
-	// 割り込みにより400Hz(2.5ms)で以降のコードが実行
-	while (Loop_flag == 0){yield();}
-	Loop_flag = 0;
+  // 割り込みにより400Hz(2.5ms)で以降のコードが実行
+  while (Loop_flag == 0){yield();}
+  Loop_flag = 0;
 
-	E_time				= micros();
-	Interval_time	= (E_time - S_time) / 1000000.0f;
-	Elapsed_time	+= Interval_time;
-	S_time = E_time;
-
+  E_time				= micros();
+  Interval_time	= (E_time - S_time) / 1000000.0f;
+  Elapsed_time	+= Interval_time;
+  S_time = E_time;
 //	USBSerial.printf("Interval_time: %fmS\n", Interval_time * 1000);	// インターバル時間
 
-	// Read Sensor Value
-	sense_time = sensor_read();		// センサー読み込み
-//	USBSerial.printf("sense_time:%8.3fmS\n", sense_time * 1000); // 読み込みにかかった時間。
-	uint32_t cs_time = micros();
+  sense_time = sensor_read();		// センサー読み込み
+//  USBSerial.printf("sense_time:%8.3fmS\n", sense_time * 1000); // 読み込みにかかった時間。
+  uint32_t cs_time = micros();
 
-	led_drive();		// LEDを点灯させる
+  led_drive();		// LEDを点灯させる
 
-	Control_mode = Stick[CONTROLMODE];					// Stable/Sports モード
-	if ((uint8_t)Stick[ALTCONTROLMODE] == 1)		// 高度維持モード
-		Throttle_control_mode = 1;
-	else if ((uint8_t)Stick[ALTCONTROLMODE] == 0)
-		Throttle_control_mode = 0;
-	else
-		Throttle_control_mode = 0;
-	// if (Interval_time>0.006)USBSerial.printf("%9.6f\n\r", Interval_time);
-	// USBSerial.printf("Mode=%d OverG=%d\n\r", Mode, OverG_flag);
-	// Begin Mode select
-	switch(Mode){
-		case INIT_MODE:
-//			USBSerial.println("INIT_MODE");
-			motor_stop();
-			Elevator_center    = 0.0f;
-			Aileron_center     = 0.0f;
-			Rudder_center      = 0.0f;
-			Roll_angle_offset  = 0.0f;
-			Pitch_angle_offset = 0.0f;
-			Yaw_angle_offset   = 0.0f;
-			sensor_reset_offset();
-			Mode = AVERAGE_MODE;
-			break;;
-		
-		case AVERAGE_MODE:					// ジャイロの平均値を得る
-//			USBSerial.println("AVERAGE_MODE");		
-			motor_stop();
-			// Gyro offset Estimate
-			if ( sensor_calc_offset_avarage() > AVERAGENUM) { // オフセット平均値を得る
-				Mode = PARKING_MODE;
- 				S_time = micros();
-			}
-			break;
+  Control_mode = Stick[CONTROLMODE];					// Stable/Sports モード
+  if ((uint8_t)Stick[ALTCONTROLMODE] == 1)		// 高度維持モード
+    Throttle_control_mode = 1;
+  else if ((uint8_t)Stick[ALTCONTROLMODE] == 0)
+    Throttle_control_mode = 0;
+  else
+  Throttle_control_mode = 0;
+  // if (Interval_time>0.006)USBSerial.printf("%9.6f\n\r", Interval_time);
+  // USBSerial.printf("Mode=%d OverG=%d\n\r", Mode, OverG_flag);
+  // Begin Mode select
+  switch(Mode){
+    case INIT_MODE:
+      motor_stop();
+      Elevator_center    = 0.0f;
+      Aileron_center     = 0.0f;
+      Rudder_center      = 0.0f;
+      Roll_angle_offset  = 0.0f;
+      Pitch_angle_offset = 0.0f;
+      Yaw_angle_offset   = 0.0f;
+      sensor_reset_offset();
+      Mode = AVERAGE_MODE;
+      break;;
 
-		case FLIGHT_MODE:
-			Control_period = Interval_time;
-			// Judge Mode change
-			if (arm_check() == 1) Mode = AUTO_LANDING_MODE;				// ARMボタンが押されたら自動着地
-			if (OverG_flag == 1) Mode = PARKING_MODE;							// 衝撃が加わったらモーターを止める
-//			if (Mode != OldMode) ahrs_reset();
+    case AVERAGE_MODE:  // ジャイロの平均値を得る
+      motor_stop();
+      // Gyro offset Estimate
+      if ( sensor_calc_offset_avarage() > AVERAGENUM) { // オフセット平均値を得る
+        Mode = PARKING_MODE;
+        S_time = micros();
+      }
+      break;
+
+    case FLIGHT_MODE:
+      Control_period = Interval_time;
+      // Judge Mode change
+      if (arm_check() == 1) Mode = AUTO_LANDING_MODE;				// ARMボタンが押されたら自動着地
+      if (OverG_flag == 1) Mode = PARKING_MODE;							// 衝撃が加わったらモーターを止める
+//    if (Mode != OldMode) ahrs_reset();
+
+      get_command();			// リモコンデータ解析
+      angle_control();		// 姿勢制御
+      rate_control();			// モーター制御
+      break;
+	
+    case FLIP_MODE:
+      flip();
+      break;
+
+    case PARKING_MODE:
+      motor_stop();
+      OverG_flag = 0;
+      Thrust0    = 0.0;
+      Alt_flag   = 0;
+      // flip reset
+      Roll_rate_reference  = 0;
+      Ahrs_reset_flag      = 0;
+      Flip_counter         = 0;
+      Flip_flag            = 0;
+      Range0flag           = 0;
+      Alt_ref              = Alt_ref0;
+      Stick_return_flag    = 0;
+      Landing_state        = 0;
+      Auto_takeoff_counter = 0;
+      Thrust_filtered.reset();
+      EstimatedAltitude.reset();
+      Duty_fr.reset();
+      Duty_fl.reset();
+      Duty_rr.reset();
+      Duty_rl.reset();
+      if(Mode != OldMode) ahrs_reset();
 			
-			get_command();			// リモコンデータ解析
-			angle_control();		// 姿勢制御
-			rate_control();			// モーター制御
-			break;
-    	
-		case FLIP_MODE:
-			flip();
-			break;
+      if (arm_check() == 1) {			// ARM ボタン　判定
+        buzzer_sound(2000, 200);		
+        Mode = FLIGHT_MODE;
+      }
+      break;
+
+    case AUTO_LANDING_MODE:
+      if (auto_landing() == 1) Mode = PARKING_MODE;
+      if (arm_check() == 1) Mode = PARKING_MODE;
+      angle_control();		// Angle Control
+      rate_control();			// Rate Control
+      break;
+  }
+
+  telemetry();	// テレメトリーデータ送信
+
+  uint32_t ce_time = micros();
+  Dt_time          = ce_time - cs_time;
+  OldMode          = Mode;  // Memory now mode
 		
-		case PARKING_MODE:
-//			USBSerial.println("PARKING_MODE");
-			// Parking
-			motor_stop();
-			OverG_flag = 0;
-			Thrust0    = 0.0;
-			Alt_flag   = 0;
-			// flip reset
-			Roll_rate_reference  = 0;
-			Ahrs_reset_flag      = 0;
-			Flip_counter         = 0;
-			Flip_flag            = 0;
-			Range0flag           = 0;
-			Alt_ref              = Alt_ref0;
-			Stick_return_flag    = 0;
-			Landing_state        = 0;
-			Auto_takeoff_counter = 0;
-			Thrust_filtered.reset();
-			EstimatedAltitude.reset();
-			Duty_fr.reset();
-			Duty_fl.reset();
-			Duty_rr.reset();
-			Duty_rl.reset();
-			 if(Mode != OldMode)ahrs_reset();
-			
-			if (arm_check() == 1) {			// ARM ボタン　判定
-				buzzer_sound(2000, 200);		
-				Mode = FLIGHT_MODE;
-			}
-
-			break;
-
-		case AUTO_LANDING_MODE:
-			if (auto_landing() == 1) Mode = PARKING_MODE;
-			if (arm_check() == 1) Mode = PARKING_MODE;
-			angle_control();		// Angle Control
-			rate_control();			// Rate Control
-			break;
-	}
-
-	telemetry();	// テレメトリーデータ送信
-
-	uint32_t ce_time = micros();
-	Dt_time          = ce_time - cs_time;
-	OldMode          = Mode;  // Memory now mode
-		
- 	// End of Loop_400Hz function
+// End of Loop_400Hz function
 // USBSerial.printf("Dt_time: %d us\n",Dt_time);
 }
 
@@ -640,58 +633,67 @@ void getRPY(bool nocheck){	   // Get Roll Pitch Yaw command
 }
 
 void get_command(void) {
-    static uint16_t stick_count = 0;
-    static float auto_throttle  = 0.0f;
-    static float old_alt        = 0.0;
-    float th, thlo;
-    float throttle_limit = 0.7;
-    float thrust_max;
+  static uint16_t stick_count = 0;
+  static float auto_throttle  = 0.0f;
+  static float old_alt        = 0.0;
+  float th, thlo;
+  float throttle_limit = 0.7;
+  float thrust_max;
 
-    // Thrust control
-    thlo = Stick[THROTTLE];
-    // thlo = thlo/throttle_limit;
+  // Thrust control
+  thlo = Stick[THROTTLE];
+  // thlo = thlo/throttle_limit;
 
-    if (Throttle_control_mode == 0) {	// 高度維持 マニュアルモード
-        // Manual Throttle
-        if (thlo < 0.0) thlo = 0.0;
-        if (thlo > 1.0f) thlo = 1.0f;
-        if ((-0.2 < thlo) && (thlo < 0.2)) thlo = 0.0f;  // 不感帯
-        th = (get_trim_duty(Voltage) + (thlo - 0.4)) * BATTERY_VOLTAGE;
-        if (th < 0) th = 0.0f;
-        Thrust_command = Thrust_filtered.update(th, Interval_time);
-    } else if (Throttle_control_mode == 1) {	// 高度維持 AUTOモード
-        // Auto Throttle Altitude Control
-        Alt_flag = 1;
-        if (Auto_takeoff_counter < 500) {
-            Thrust0 = (float)Auto_takeoff_counter / 1000.0;
-            if (Thrust0 > get_trim_duty(3.8)) Thrust0 = get_trim_duty(3.8);
-            Auto_takeoff_counter++;
-        } else if (Auto_takeoff_counter < 1000) {
-            Thrust0 = (float)Auto_takeoff_counter / 1000.0;
-            if (Thrust0 > get_trim_duty(Voltage)) Thrust0 = get_trim_duty(Voltage);
-            Auto_takeoff_counter++;
-        } else
-            Thrust0 = get_trim_duty(Voltage);
-
-        // Get Altitude ref
-        if ((-0.2 < thlo) && (thlo < 0.2)) thlo = 0.0f;  // 不感帯
-        Alt_ref = Alt_ref + thlo * 0.001;
-        Alt_ref = limit(Alt_ref, ALT_REF_MIN,  ALT_REF_MAX);
-
-        if ((Range0flag > OldRange0flag) || (Range0flag == RNAGE0FLAG_MAX)) {	// 高度を下げる
-            Thrust0        = Thrust0 - 0.02;
-            OldRange0flag = Range0flag;
-        }
-        Thrust_command = Thrust0 * BATTERY_VOLTAGE;
+  if (Throttle_control_mode == 0){	// 高度維持 マニュアルモード
+    // Manual Throttle
+    thlo = limit(thlo, 0.0f, 1.0f);
+    if ((-0.2 < thlo) && (thlo < 0.2)) thlo = 0.0f;  // 不感帯
+    th = (get_trim_duty(Voltage) + (thlo - 0.4)) * BATTERY_VOLTAGE;
+    if (th < 0) th = 0.0f;
+    Thrust_command = Thrust_filtered.update(th, Interval_time);
+  } else if (Throttle_control_mode == 1) {	// 高度維持 AUTOモード
+    // Auto Throttle Altitude Control
+    Alt_flag = 1;
+    if (Auto_takeoff_counter < 500) 
+    {
+      Thrust0 = (float)Auto_takeoff_counter / 1000.0;
+      if (Thrust0 > get_trim_duty(3.8)){
+        Thrust0 = get_trim_duty(3.8);
+      }
+      Auto_takeoff_counter++;
+    } else if (Auto_takeoff_counter < 1000)
+    {
+      Thrust0 = (float)Auto_takeoff_counter / 1000.0;
+      if (Thrust0 > get_trim_duty(Voltage)){
+        Thrust0 = get_trim_duty(Voltage);
+      }
+      Auto_takeoff_counter++;
+    } else{
+      Thrust0 = get_trim_duty(Voltage);
     }
-
-		getRPY(false);	// get Roll Pitch Yow
-
-    // flip button check
-    if (Flip_flag == 0 /*&& Throttle_control_mode == 0*/) {
-        Flip_flag = get_flip_button();
-        if (Flip_flag == 1) Mode = FLIP_MODE;
+    // Get Altitude ref
+    if ((-0.2 < thlo) && (thlo < 0.2)){   // 不感帯
+      thlo = 0.0f;
     }
+    Alt_ref = Alt_ref + thlo * 0.001;
+    Alt_ref = limit(Alt_ref, ALT_REF_MIN,  ALT_REF_MAX);
+
+    if ((Range0flag > OldRange0flag) || (Range0flag == RNAGE0FLAG_MAX)) {	// 高度を下げる
+      Thrust0 = Thrust0 - 0.02;
+      OldRange0flag = Range0flag;
+    }
+    Thrust_command = Thrust0 * BATTERY_VOLTAGE;
+  }
+
+  getRPY(false);	// get Roll Pitch Yow
+
+  // flip button check
+  if (Flip_flag == 0 /*&& Throttle_control_mode == 0*/) {
+    Flip_flag = get_flip_button();
+    if (Flip_flag == 1){
+      Mode = FLIP_MODE;
+    }
+  }
 }
 
 uint8_t auto_landing(void) {
