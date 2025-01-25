@@ -31,7 +31,7 @@
 
 #define STRIP_COUNT 2 //つなぐLEDの数
 Adafruit_NeoPixel led_strip_esp( 1, PIN_LED_ESP , NEO_GRB + NEO_KHZ800);	      // ESP側LED定義
-Adafruit_NeoPixel led_strip(STRIP_COUNT, PIN_LED_ONBORD, NEO_GRB + NEO_KHZ800);	// 機体側LED定義
+Adafruit_NeoPixel led_strip(STRIP_COUNT, PIN_LED_ONBORD, NEO_GRB + NEO_KHZ800); // 機体側LED定義
 
 uint32_t Led_color       = 0x000000;
 uint32_t Led_color2      = 255;
