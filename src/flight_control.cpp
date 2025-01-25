@@ -234,9 +234,14 @@ uint8_t auto_landing(void);
 float get_trim_duty(float voltage);
 void flip(void);
 float get_rate_ref(float x);
-
 uint8_t check_calib_button(void);
 uint8_t stick_function();
+
+float limit(float val, float min, float max){	// 上限下限の範囲内の値にする
+	if(val < min) return min;
+	if(val > max) return max;
+	return val;
+}
 
 // 割り込み関数
 // Intrupt function
@@ -621,20 +626,17 @@ void getRPY(bool nocheck){	   // Get RPY command
    // Get RPY command	
 	if (nocheck || Control_mode == ANGLECONTROL) { 
     Roll_angle_command = 0.4 * Stick[AILERON];
-    if (Roll_angle_command < -1.0f) Roll_angle_command = -1.0f;
-    if (Roll_angle_command > 1.0f) Roll_angle_command = 1.0f;
+		Roll_angle_command = limit(Roll_angle_command, -1.0f, 1.0f);
 
     Pitch_angle_command = 0.4 * Stick[ELEVATOR];
-    if (Pitch_angle_command < -1.0f) Pitch_angle_command = -1.0f;
-    if (Pitch_angle_command > 1.0f) Pitch_angle_command = 1.0f;
+		Pitch_angle_command = limit(Pitch_angle_command, -1.0f, 1.0f);	
 	}
 	if (Control_mode == RATECONTROL) {
 		Roll_rate_reference  = get_rate_ref(Stick[AILERON]);
     Pitch_rate_reference = get_rate_ref(Stick[ELEVATOR]);
   }
 	Yaw_angle_command = Stick[RUDDER];
-	if (Yaw_angle_command < -1.0f) Yaw_angle_command = -1.0f;
-	if (Yaw_angle_command > 1.0f) Yaw_angle_command = 1.0f;
+	Yaw_angle_command = limit(Yaw_angle_command, -1.0f, 1.0f);	
     // Yaw control
 	Yaw_rate_reference = 2.0f * PI * (Yaw_angle_command - Rudder_center);
 }
@@ -676,8 +678,7 @@ void get_command(void) {
         // Get Altitude ref
         if ((-0.2 < thlo) && (thlo < 0.2)) thlo = 0.0f;  // 不感帯
         Alt_ref = Alt_ref + thlo * 0.001;
-        if (Alt_ref > ALT_REF_MAX) Alt_ref = ALT_REF_MAX;
-        if (Alt_ref < ALT_REF_MIN) Alt_ref = ALT_REF_MIN;
+				Alt_ref = limit(Alt_ref, ALT_REF_MIN,  ALT_REF_MAX);
 
         if ((Range0flag > OldRange0flag) || (Range0flag == RNAGE0FLAG_MAX)) {	// 高度を下げる
             Thrust0        = Thrust0 - 0.02;
@@ -768,14 +769,12 @@ void rate_control(void) {
             z_dot_err      = Z_dot_ref - Alt_velocity;
             Thrust_command = Thrust_filtered.update(
                 (Thrust0 + z_dot_pid.update(z_dot_err, Interval_time)) * BATTERY_VOLTAGE, Interval_time);
-            if (Thrust_command / BATTERY_VOLTAGE > Thrust0 * 1.15f) Thrust_command = BATTERY_VOLTAGE * Thrust0 * 1.15f;
-            if (Thrust_command / BATTERY_VOLTAGE < Thrust0 * 0.85f) Thrust_command = BATTERY_VOLTAGE * Thrust0 * 0.85f;
+						Thrust_command = limit( Thrust_command, BATTERY_VOLTAGE * Thrust0 * 0.85f, BATTERY_VOLTAGE * Thrust0 * 1.15f);		
         } else if (Mode == AUTO_LANDING_MODE) {
             z_dot_err      = -0.15 - Alt_velocity;
             Thrust_command = Thrust_filtered.update(
                 (Thrust0 + z_dot_pid.update(z_dot_err, Interval_time)) * BATTERY_VOLTAGE, Interval_time);
-            // if (Thrust_command/BATTERY_VOLTAGE > Thrust0*1.1f ) Thrust_command = BATTERY_VOLTAGE*Thrust0*1.1f;
-            // if (Thrust_command/BATTERY_VOLTAGE < Thrust0*0.9f ) Thrust_command = BATTERY_VOLTAGE*Thrust0*0.9f;
+//					Thrust_command = limit( Thrust_command, BATTERY_VOLTAGE * Thrust0 * 0.9f, BATTERY_VOLTAGE * Thrust0 * 1.1f);
         }
 
         // Motor Control
@@ -897,27 +896,14 @@ void angle_control(void) {
         if (Alt_flag >= 1) Z_dot_ref = alt_pid.update(alt_err, Interval_time);
 
         if (Control_mode == ANGLECONTROL) {	// アングルモードなら
-            // Angle Control
-            // Led_color = RED;
-/*
-						if( RangeFront != 0 && RangeFront < 300.0){		// 前方衝突回避
-							Pitch_angle_command += 0.1;
-							if(Pitch_angle_command > 0.4) Pitch_angle_command = 0.4;
-						} 
- */
            // Get Roll and Pitch angle ref
             Roll_angle_reference  = 0.5f * PI * (Roll_angle_command - Aileron_center);
             Pitch_angle_reference = 0.5f * PI * (Pitch_angle_command - Elevator_center);
-	
-            if (Roll_angle_reference >  (30.0f * PI / 180.0f))	Roll_angle_reference  =  30.0f * PI / 180.0f;		// 傾き30°に制限
-            if (Roll_angle_reference < -(30.0f * PI / 180.0f))	Roll_angle_reference  = -30.0f * PI / 180.0f;
-            if (Pitch_angle_reference>  (30.0f * PI / 180.0f))	Pitch_angle_reference =  30.0f * PI / 180.0f;
-            if (Pitch_angle_reference< -(30.0f * PI / 180.0f))	Pitch_angle_reference = -30.0f * PI / 180.0f;
-
+						Roll_angle_reference = limit(Roll_angle_reference, -30.0f * PI / 180.0f, 30.0f * PI / 180.0f);		// 傾き+-30°に制限
+    				Pitch_angle_reference = limit(Pitch_angle_reference, -30.0f * PI / 180.0f, 30.0f * PI / 180.0f);	// 傾き+-30°に制限
             // Error
             phi_err   = Roll_angle_reference - (Roll_angle - Roll_angle_offset);
             theta_err = Pitch_angle_reference - (Pitch_angle - Pitch_angle_offset);
-
             // Angle Control PID
             Roll_rate_reference  = phi_pid.update(phi_err, Interval_time);
             Pitch_rate_reference = theta_pid.update(theta_err, Interval_time);
